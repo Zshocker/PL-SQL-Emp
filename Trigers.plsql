@@ -38,19 +38,21 @@ CREATE OR REPLACE TRIGGER ModHistory
   DECLARE
   typeMod VARCHAR2(40);
   Dat DATE;
+  Emp int(4):=:old.EMPLOYEE_ID;
   BEGIN
   Dat:=CURRENT_DATE();
   IF DELETING THEN 
   typeMod:='Delete';
   ELSIF INSERTING THEN 
   typeMod:='Insert';
+  Emp:=:new.EMPLOYEE_ID;
   ELSIF UPDATING THEN
   typeMod:='Update';
   END IF;
   INSERT INTO History 
   VALUES
   (
-    :old.EMPLOYEE_ID,
+    Emp,
     Dat,
     typeMod
   );

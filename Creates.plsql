@@ -45,8 +45,8 @@ CREATE TABLE Resultat
     note number(4,2),
     CONSTRAINT Res_pk PRIMARY KEY (codMod,codeExam,numEtud)
 );*/
---Create a new Table Trigger
 
+/*
 CREATE OR REPLACE TRIGGER Const_Min
   BEFORE UPDATE ON PREREQUIS
   FOR EACH ROW
@@ -55,7 +55,6 @@ CREATE OR REPLACE TRIGGER Const_Min
     RAISE_APPLICATION_ERROR(-20000,'no mod on note min');
   END Const_Min;    
 /
---Create a new Table Trigger
 
 CREATE OR REPLACE TRIGGER effect_max_Insc
   BEFORE INSERT ON INSCRIPTION
@@ -78,4 +77,73 @@ CREATE OR REPLACE TRIGGER effect_max_Insc
     END IF;
   END effect_max_Insc;
 /
-Show ERRORS;
+CREATE OR REPLACE TRIGGER EXAMEN_Con 
+  BEFORE INSERT ON EXAMEN
+  FOR EACH ROW
+  DECLARE
+  num int(4):=0;
+  BEGIN
+    SELECT COUNT(*)
+    into num
+    FROM INSCRIPTION
+    WHERE CODMOD=:new.codMod;
+  if num=0 THEN
+  RAISE_APPLICATION_ERROR(-20002,'Can`t Do that');
+  END IF;
+  END EXAMEN_Con;
+/*
+CREATE OR REPLACE TRIGGER pass_exam
+  BEFORE INSERT ON RESULTAT
+  FOR EACH ROW
+  DECLARE 
+  dateInsce DATE;
+  DateExa DATE;
+  BEGIN
+  SELECT DATEEXAM
+  into DateExa
+  FROM EXAMEN
+  WHERE CODEEXAM=:new.CODEEXAM;
+  SELECT dateInsc
+  into dateInsce
+  FROM INSCRIPTION
+  WHERE numEtud=:new.numEtud and CODMOD=:new.CODMOD;
+  IF dateInsce>DateExa THEN
+  RAISE_APPLICATION_ERROR(-20003,'Un élève ne peut passer un examen que si sa date d’inscription est antérieure à la date de l’examen!!');
+  END IF;
+  END pass_exam;
+/
+SHOW ERRORS;
+CREATE OR REPLACE VIEW Etutiant_INSCRI AS (SELECT NUMETUD,CODMOD,nom FROM ETUDIANT NATURAL JOIN INSCRIPTION);
+CREATE OR REPLACE VIEW Etudiant_Avg AS (SELECT NUMETUD,nom,AVG(NOTE) as AVERAGEs FROM  (SELECT I.NUMETUD,nom,NOTE FROM Etutiant_INSCRI I JOIN RESULTAT R ON I.NUMETUD=R.NUMETUD and I.CODMOD=R.CODMOD) GROUP BY NUMETUD,nom);
+CREATE OR REPLACE TRIGGER Const_Min
+  BEFORE UPDATE ON PREREQUIS
+  FOR EACH ROW
+  WHEN (old.noteMin!=new.noteMin)
+  DECLARE
+  numEQ int(4):=0;
+  BEGIN
+    select count(*)
+    into numEQ
+    from INSCRIPTION
+    WHERE CODMOD=:new.codMod;
+    IF numEQ>0 THEN 
+    RAISE_APPLICATION_ERROR(-20000,'no mod on note min');
+    END IF;
+  END Const_Min;    
+/*/
+CREATE OR REPLACE TRIGGER Const_Effec_MAx
+  BEFORE UPDATE ON MODULE
+  FOR EACH ROW
+  WHEN (old.effecMax!=new.effecMax)
+  DECLARE
+  numEQ int(4):=0;
+  BEGIN
+    select count(*)
+    into numEQ
+    from INSCRIPTION
+    WHERE CODMOD=:old.codMod;
+    IF numEQ>0 THEN 
+    RAISE_APPLICATION_ERROR(-20000,'no mod on effect max');
+    END IF;
+  END Const_Effec_MAx;   
+/ 
