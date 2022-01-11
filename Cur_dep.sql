@@ -16,5 +16,6 @@ begin
     exit when CR%NOTFOUND;
     dbms_output.put_line(Dep_rec.DEPARTMENT_ID||' / '|| Dep_rec.DEPARTMENT_NAME||' / '||Dep_rec.massSa);
   end loop;
+  CLOSE CR;
 end;
 /
